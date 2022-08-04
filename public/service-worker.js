@@ -1,4 +1,5 @@
-const CACHE_NAME = 'cache-v1';
+const APP_PREFIX = 'budget-tracker-';
+const CACHE_NAME = APP_PREFIX + 'cache-v1';
 
 const FILES_TO_CACHE = [
     '/',
@@ -11,9 +12,10 @@ const FILES_TO_CACHE = [
     '/icons/icon-384x384.png',
     '/icons/icon-512x512.png',
     '/index.html',
-    '/index.js',
-    '/style.css',
-    '/manifest.json'
+    '/js/index.js',
+    '/css/style.css',
+    '/manifest.json',
+    '/js/idb.js'
 ];
 
 // Install a service worker
@@ -28,15 +30,12 @@ self.addEventListener('install', e => {
 });
 
 // fetch resources
-self.addEventListener('fetch', function (event) {
-    event.respondWith(
-        caches.match(event.request).then(function (response) {
-            if (response) {
-                return response;
-            }
-            return fetch(event.request);
-        }
-        )
+self.addEventListener('fetch', e => {
+    console.log('[ServiceWorker] Fetch', e.request.url);
+    e.respondWith(
+        caches.match(e.request).then(response => {
+            return response || fetch(e.request);
+        })
     );
 });
 
