@@ -1,68 +1,57 @@
-const APP_PREFIX = 'BudgetTracker';
-const VERSION = 'version_01';
-const CACHE_NAME = APP_PREFIX + VERSION;
+const CACHE_NAME = 'cache-v1';
 
 const FILES_TO_CACHE = [
     '/',
+    '/icons/icon-72x72.png',
+    '/icons/icon-96x96.png',
+    '/icons/icon-128x128.png',
+    '/icons/icon-144x144.png',
+    '/icons/icon-152x152.png',
+    '/icons/icon-192x192.png',
+    '/icons/icon-384x384.png',
+    '/icons/icon-512x512.png',
     '/index.html',
-    '/js/index.js',
-    '/css/style.css',
-    '/js/idb.js',
-    '/manifest.json',
-    "/icons/icon-72x72.png",
-    "/icons/icon-96x96.png",
-    "/icons/icon-128x128.png",
-    "/icons/icon-144x144.png",
-    "/icons/icon-152x152.png",
-    "/icons/icon-192x192.png",
-    "/icons/icon-384x384.png",
-    "/icons/icon-512x512.png"
+    '/index.js',
+    '/style.css',
+    '/manifest.json'
 ];
 
-// respond with cached resources
-self.addEventListener('fetch', function (event) {
-    console.log('fetch request : ' + event.request.url);
-    event.respondWith(
-        caches.match(event.request).then(function (request) {
-            if (request) {
-                console.log('responding with cache : ' + request.url);
-                return request;
-            }
-            else {
-                console.log('file is not cached, fetching : ' + event.request.url);
-                return fetch(event.request)
-            }
-        })
-    );
-})
-
-// cache resources
-self.addEventListener('install', function (event) {
-    console.log('installing service worker');
-    event.waitUntil(
-        caches.open(CACHE_NAME).then(function (cache) {
-            console.log('install cache : ' + CACHE_NAME);
+// Install a service worker
+self.addEventListener('install', e => {
+    console.log('[ServiceWorker] Install');
+    e.waitUntil(
+        caches.open(CACHE_NAME).then(cache => {
+            console.log('[ServiceWorker] Caching app shell');
             return cache.addAll(FILES_TO_CACHE);
         })
     );
-})
+});
 
-// activate service worker and delete old caches
-self.addEventListener('activate', function (event) {
-    console.log('activating service worker');
+// fetch resources
+self.addEventListener('fetch', function (event) {
+    event.respondWith(
+        caches.match(event.request).then(function (response) {
+            if (response) {
+                return response;
+            }
+            return fetch(event.request);
+        }
+        )
+    );
+});
+
+// activate the service worker
+self.addEventListener('activate', event => {
+    console.log('[ServiceWorker] Activate');
     event.waitUntil(
         caches.keys().then(function (keyList) {
-            let cacheKeepList = keyList.filter(function (key) {
-                return key.indexOf(APP_PREFIX);
-            });
-            return Promise.all(
-                keyList.map(function (key, i) {
-                    if (cacheKeepList.indexOf(key) === -1) {
-                        console.log('deleting cache : ' + keyList[i]);
-                        return caches.delete(keyList[i]);
-                    }
-                })
-            );
+            return Promise.all(keyList.map(function (key) {
+                if (key !== CACHE_NAME) {
+                    console.log('[ServiceWorker] Removing old cache', key);
+                    return caches.delete(key);
+                }
+            }));
         })
     );
+    return self.clients.claim();
 });

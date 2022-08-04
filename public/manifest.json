@@ -41,8 +41,8 @@
             "type": "image/png"
         }
     ],
-    "nane": "Budget Tracker App",
-    "short_name": "Budget Tracker App",
+    "nane": "Budget Tracker",
+    "short_name": "Budget Tracker",
     "display": "standalone",
     "start_url": ".",
     "background_color": "#ffffff",
